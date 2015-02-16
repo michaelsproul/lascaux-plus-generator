@@ -6,3 +6,8 @@ default: generate
 	./generate
 
 generate: generate.cpp
+
+clean:
+	rm -f snapshot.json generate
+
+.PHONY: default clean
