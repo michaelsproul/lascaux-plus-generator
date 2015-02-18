@@ -65,6 +65,10 @@ int main() {
 
         output_glyph_to_json(json_output, char_code, face);
         print_glyph(face);
+
+        if (char_code != UNICODE_END - 1) {
+            fprintf(json_output, ",\n");
+        }
     }
 
     fprintf(json_output, "}");
@@ -80,6 +84,8 @@ void output_glyph_to_json(FILE * file, unsigned char_code, FT_Face face) {
     // where XXXXXXXX is the unicode character code in hexadecimal.
     fprintf(file, "\"%08x\": [{\"strokes\": [[\n", char_code);
 
+    bool first = true;
+
     for (unsigned i = 0; i < bitmap->rows; i++) {
         for (int j = 0; j < bitmap->pitch; j++) {
             char byte = bitmap->buffer[i * bitmap->pitch + j];
@@ -90,13 +96,20 @@ void output_glyph_to_json(FILE * file, unsigned char_code, FT_Face face) {
             // Note, pixels are stored left-to-right from the MSB to the LSB.
             for (int k = 0; k < k_stop; k++) {
                 if (get_bit(byte, 7 - k) == 1) {
-                    fprintf(file, "{\"x\": %d, \"y\": %d},\n", 8 * j + k, i);
+                    // Print the trailing comma for the previous entry.
+                    if (first) {
+                        first = false;
+                    } else {
+                        fprintf(file, ",\n");
+                    }
+
+                    fprintf(file, "{\"x\": %d, \"y\": %d}", 8 * j + k, i);
                 }
             }
         }
     }
 
-    fprintf(file, "]]}],\n");
+    fprintf(file, "\n]]}]");
 }
 
 void print_glyph(FT_Face face) {
